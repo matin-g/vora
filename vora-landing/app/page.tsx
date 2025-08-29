@@ -26,6 +26,8 @@ interface VideoSlideshowProps {
   introPhase: number
 }
 
+
+
 const VideoSlideshow: React.FC<VideoSlideshowProps> = ({ introPhase }) => {
   const [currentVideo, setCurrentVideo] = useState(0)
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
@@ -170,44 +172,6 @@ interface TurfBackgroundProps {
 }
 
 const TurfBackground: React.FC<TurfBackgroundProps> = ({ scrollProgress, introPhase }) => {
-  const [grassParticles, setGrassParticles] = useState<Array<{
-    left: number
-    top: number
-    width: number
-    height: number
-    opacity1: number
-    opacity2: number
-    duration: number
-    blur: number
-  }>>([])
-
-  // Generate grass particles on client side only to avoid hydration mismatch
-  useEffect(() => {
-    const particles = Array.from({ length: 15 }, () => ({
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      width: 2 + Math.random() * 4,
-      height: 10 + Math.random() * 20,
-      opacity1: 0.6 + Math.random() * 0.4,
-      opacity2: 0.4 + Math.random() * 0.3,
-      duration: 3 + Math.random() * 4,
-      blur: 0.5 + Math.random() * 0.5
-    }))
-    setGrassParticles(particles)
-  }, [])
-
-  // Calculate various animation values based on scroll progress
-  const opacity = Math.min(1, scrollProgress * 2) // Fade in quickly
-  const scale = 1 + scrollProgress * 0.3 // Subtle zoom effect
-  const translateY = scrollProgress * -100 // Parallax movement
-  const rotation = scrollProgress * 5 // Gentle rotation
-  const brightness = 1 + scrollProgress * 0.2 // Brighten as it appears
-  const contrast = 1 + scrollProgress * 0.1 // Increase contrast
-  
-  // Create multiple layers for depth
-  const layer1Progress = Math.max(0, Math.min(1, (scrollProgress - 0.2) * 2))
-  const layer2Progress = Math.max(0, Math.min(1, (scrollProgress - 0.4) * 2))
-  
   return (
     <div style={{
       position: 'absolute',
@@ -215,132 +179,33 @@ const TurfBackground: React.FC<TurfBackgroundProps> = ({ scrollProgress, introPh
       left: 0,
       right: 0,
       bottom: 0,
-      zIndex: 0, // Behind the content
-      opacity: opacity,
-      transition: 'opacity 0.5s ease',
-      overflow: 'hidden'
+      zIndex: 0,
+      background: '#000'
     }}>
-      {/* Main turf layer */}
+      {/* Main turf image with scroll parallax */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
-        width: '120%',
+        width: '100%',
         height: '120%',
         backgroundImage: 'url(/images/turf.jpg)',
         backgroundSize: 'cover',
         backgroundPosition: 'center center',
         backgroundRepeat: 'no-repeat',
-        transform: `
-          translate3d(-10%, ${translateY}px, 0) 
-          scale(${scale}) 
-          rotate(${rotation}deg)
-        `,
-        filter: `brightness(${brightness}) contrast(${contrast}) saturate(1.3)`,
-        willChange: 'transform, filter',
-        transformOrigin: 'center center'
+        transform: `translateY(${scrollProgress * -30}px)`,
+        willChange: 'transform'
       }} />
       
-      {/* Animated grass particles overlay */}
+      {/* Simple lighting overlay */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        opacity: layer1Progress,
-        pointerEvents: 'none'
-      }}>
-        {grassParticles.map((particle, i) => (
-          <div
-            key={i}
-            style={{
-              position: 'absolute',
-              left: `${particle.left}%`,
-              top: `${particle.top}%`,
-              width: `${particle.width}px`,
-              height: `${particle.height}px`,
-              background: `linear-gradient(to top, 
-                rgba(34, 139, 34, ${particle.opacity1}) 0%, 
-                rgba(50, 205, 50, ${particle.opacity2}) 70%,
-                transparent 100%
-              )`,
-              borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
-              transform: `
-                translate3d(0, ${Math.sin(scrollProgress * 10 + i) * 3}px, 0)
-                rotate(${Math.sin(scrollProgress * 8 + i * 2) * 15}deg)
-                scale(${0.8 + Math.sin(scrollProgress * 6 + i * 3) * 0.3})
-              `,
-              animationName: 'grassSway',
-              animationDuration: `${particle.duration}s`,
-              animationTimingFunction: 'ease-in-out',
-              animationIterationCount: 'infinite',
-              animationDelay: `${i * 200}ms`,
-              filter: `blur(${particle.blur}px)`,
-              willChange: 'transform'
-            }}
-          />
-        ))}
-      </div>
-      
-      {/* Dynamic light rays */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        opacity: layer2Progress * 0.4,
-        background: `
-          radial-gradient(ellipse at ${30 + scrollProgress * 40}% ${20 + scrollProgress * 30}%, 
-            rgba(255, 255, 255, 0.2) 0%, 
-            rgba(255, 255, 255, 0.1) 30%, 
-            transparent 70%
-          )
-        `,
-        mixBlendMode: 'overlay',
-        transform: `rotate(${scrollProgress * 10}deg)`,
-        willChange: 'transform, background'
-      }} />
-      
-      {/* Depth gradient overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: `
-          linear-gradient(
-            ${45 + scrollProgress * 90}deg,
-            rgba(0, 0, 0, 0.2) 0%,
-            transparent 40%,
-            transparent 60%,
-            rgba(0, 0, 0, 0.3) 100%
-          )
-        `,
-        mixBlendMode: 'multiply'
-      }} />
-      
-      {/* Animated texture overlay */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        opacity: scrollProgress * 0.3,
-        background: `
-          repeating-linear-gradient(
-            ${scrollProgress * 180}deg,
-            transparent 0px,
-            rgba(34, 139, 34, 0.1) 1px,
-            transparent 2px,
-            transparent 8px
-          )
-        `,
-        mixBlendMode: 'overlay',
-        willChange: 'background'
+        background: `linear-gradient(180deg, rgba(0,0,0,${0.4 - scrollProgress * 0.2}) 0%, rgba(0,0,0,${0.2 - scrollProgress * 0.1}) 100%)`,
+        opacity: 1 - scrollProgress * 0.3
       }} />
     </div>
   )
@@ -866,20 +731,9 @@ export default function Home() {
         />
       )}
 
-      {/* Smooth Transition Overlay */}
-      {introPhase === 3 && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'radial-gradient(circle at 50% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 70%)',
-          zIndex: 9998,
-          opacity: 1,
-          animation: 'fadeIn 0.8s ease-out forwards'
-        }} />
-      )}
+
+
+
 
       {/* Enhanced Intro Animation */}
       <div style={{
@@ -1295,219 +1149,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Apple-Style Experience Section */}
+        {/* Clean Turf Section */}
         <section ref={wellnessRef} style={{
-          padding: '8rem 2rem',
+          height: '100vh',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          background: '#000'
         }}>
           {/* Turf Background Animation */}
           <TurfBackground scrollProgress={turfScrollProgress} introPhase={introPhase} />
-          <div style={{
-            maxWidth: '1000px',
-            margin: '0 auto',
-            textAlign: 'center',
-            position: 'relative',
-            zIndex: 1
-          }}>
-            <h2 style={{
-              fontSize: 'clamp(2.5rem, 6vw, 3.5rem)',
-              fontWeight: '600',
-              marginBottom: '6rem',
-              color: 'white',
-              letterSpacing: '-0.01em'
-            }}>
-              Wellness that works with your life.
-            </h2>
-
-            {/* Clean, Apple-style feature presentations */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8rem' }}>
-              
-              {/* Feature 1: AI Understanding */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                gap: '4rem',
-                alignItems: 'center'
-              }}>
-                <div style={{ textAlign: 'left' }}>
-                  <h3 style={{
-                    fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-                    fontWeight: '600',
-                    marginBottom: '1.5rem',
-                    color: 'white'
-                  }}>
-                    AI that actually gets you.
-                  </h3>
-                  <p style={{
-                    fontSize: '1.1rem',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    lineHeight: '1.6',
-                    marginBottom: '2rem'
-                  }}>
-                    No more generic advice. Vora learns your patterns, preferences, 
-                    and lifestyle to provide guidance that actually fits your reality.
-                  </p>
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontWeight: '500'
-                  }}>
-                    Powered by advanced machine learning
-                  </div>
-                </div>
-                
-                <div className="glass" style={{
-                  padding: '3rem',
-                  borderRadius: '2rem',
-                  background: 'rgba(102, 126, 234, 0.05)',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  <div style={{
-                    fontSize: '4rem',
-                    marginBottom: '2rem',
-                    filter: 'drop-shadow(0 4px 20px rgba(102, 126, 234, 0.3))'
-                  }}>
-                    🧠
-                  </div>
-                  <div style={{
-                    fontSize: '1rem',
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    textAlign: 'center'
-                  }}>
-                    &ldquo;Based on your sleep patterns and stress levels, 
-                    I recommend adjusting your evening routine...&rdquo;
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 2: Privacy */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                gap: '4rem',
-                alignItems: 'center'
-              }}>
-                                 <div className="glass" style={{
-                   padding: '3rem',
-                   borderRadius: '2rem',
-                   background: 'rgba(79, 172, 254, 0.05)',
-                   position: 'relative'
-                 }}>
-                  <div style={{
-                    fontSize: '4rem',
-                    marginBottom: '2rem',
-                    filter: 'drop-shadow(0 4px 20px rgba(79, 172, 254, 0.3))'
-                  }}>
-                    🔒
-                  </div>
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: 'rgba(255, 255, 255, 0.6)',
-                    textAlign: 'center',
-                    fontFamily: 'Monaco, monospace'
-                  }}>
-                    End-to-end encrypted • Zero data selling • GDPR compliant
-                  </div>
-                </div>
-
-                                 <div style={{ 
-                   textAlign: 'left'
-                 }}>
-                  <h3 style={{
-                    fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-                    fontWeight: '600',
-                    marginBottom: '1.5rem',
-                    color: 'white'
-                  }}>
-                    Your data. Your control.
-                  </h3>
-                  <p style={{
-                    fontSize: '1.1rem',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    lineHeight: '1.6',
-                    marginBottom: '2rem'
-                  }}>
-                    Built privacy-first from day one. Your health data never leaves 
-                    your device without your explicit consent.
-                  </p>
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontWeight: '500'
-                  }}>
-                    Enterprise-grade security
-                  </div>
-                </div>
-              </div>
-
-              {/* Feature 3: Real-time */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-                gap: '4rem',
-                alignItems: 'center'
-              }}>
-                <div style={{ textAlign: 'left' }}>
-                  <h3 style={{
-                    fontSize: 'clamp(2rem, 4vw, 2.5rem)',
-                    fontWeight: '600',
-                    marginBottom: '1.5rem',
-                    color: 'white'
-                  }}>
-                    Guidance when you need it.
-                  </h3>
-                  <p style={{
-                    fontSize: '1.1rem',
-                    color: 'rgba(255, 255, 255, 0.7)',
-                    lineHeight: '1.6',
-                    marginBottom: '2rem'
-                  }}>
-                    Real-time insights and gentle nudges that help you make 
-                    better choices throughout your day, not just during workouts.
-                  </p>
-                  <div style={{
-                    fontSize: '0.9rem',
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontWeight: '500'
-                  }}>
-                    Available 24/7
-                  </div>
-                </div>
-                
-                <div className="glass" style={{
-                  padding: '3rem',
-                  borderRadius: '2rem',
-                  background: 'rgba(67, 233, 123, 0.05)',
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '1rem'
-                }}>
-                  <div style={{
-                    fontSize: '2rem',
-                    filter: 'drop-shadow(0 4px 20px rgba(67, 233, 123, 0.3))'
-                  }}>
-                    ⚡
-                  </div>
-                  <div style={{
-                    padding: '1rem 2rem',
-                    background: 'rgba(67, 233, 123, 0.1)',
-                    borderRadius: '2rem',
-                    border: '1px solid rgba(67, 233, 123, 0.2)',
-                    fontSize: '0.9rem',
-                    color: 'rgba(255, 255, 255, 0.9)',
-                    textAlign: 'center'
-                  }}>
-                    💡 It&apos;s 2:30 PM and your energy is dipping. 
-                    Try a 5-minute walk or some deep breathing.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </section>
         
         {/* AI Preview Section */}
@@ -1559,9 +1209,27 @@ export default function Home() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.2rem'
+                    position: 'relative',
+                    boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
                   }}>
-                    🤖
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      background: 'rgba(255, 255, 255, 0.9)',
+                      borderRadius: '50%',
+                      position: 'relative'
+                    }}>
+                      <div style={{
+                        width: '4px',
+                        height: '4px',
+                        background: '#667eea',
+                        borderRadius: '50%',
+                        position: 'absolute',
+                        top: '6px',
+                        left: '6px',
+                        animation: 'glow 2s ease-in-out infinite'
+                      }} />
+                    </div>
                   </div>
                   <div>
                     <div style={{ fontWeight: '600' }}>Vora AI</div>
@@ -1686,19 +1354,22 @@ export default function Home() {
                   name: "Sarah Chen",
                   role: "Product Manager",
                   text: "Vora completely changed how I approach wellness. It&apos;s like having a personal health scientist.",
-                  avatar: "👩‍💼"
+                  initials: "SC",
+                  color: "linear-gradient(135deg, #667eea, #764ba2)"
                 },
                 {
                   name: "Marcus Rodriguez",
                   role: "Software Engineer", 
                   text: "Finally, an AI that doesn&apos;t feel robotic. Vora actually gets my lifestyle and constraints.",
-                  avatar: "👨‍💻"
+                  initials: "MR",
+                  color: "linear-gradient(135deg, #f093fb, #f5576c)"
                 },
                 {
                   name: "Dr. Emily Watson",
                   role: "Physician",
                   text: "The insights Vora provides are remarkably accurate. It&apos;s the future of preventive healthcare.",
-                  avatar: "👩‍⚕️"
+                  initials: "EW",
+                  color: "linear-gradient(135deg, #4facfe, #00f2fe)"
                 }
               ].map((testimonial, index) => (
                 <div key={index} className="glass card-hover" style={{
@@ -1708,10 +1379,20 @@ export default function Home() {
                   position: 'relative'
                 }}>
                   <div style={{
-                    fontSize: '3rem',
-                    marginBottom: '1rem'
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: testimonial.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.25rem',
+                    fontWeight: '700',
+                    color: 'white',
+                    marginBottom: '1.5rem',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)'
                   }}>
-                    {testimonial.avatar}
+                    {testimonial.initials}
                   </div>
                   <p style={{
                     fontSize: '1.1rem',

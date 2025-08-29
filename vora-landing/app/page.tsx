@@ -116,7 +116,7 @@ const VideoSlideshow: React.FC<VideoSlideshowProps> = ({ introPhase }) => {
             opacity: currentVideo === index ? 1 : 0,
             transition: 'opacity 1.5s ease-in-out, transform 1.5s ease-in-out',
             transform: currentVideo === index ? 'scale(1)' : 'scale(1.05)',
-            filter: 'brightness(0.7) saturate(1.2) contrast(1.1)',
+            // filter: 'brightness(0.9) saturate(1.2) contrast(1.1)',
             zIndex: 1
           }}
           onLoadedData={() => {
@@ -164,6 +164,188 @@ const VideoSlideshow: React.FC<VideoSlideshowProps> = ({ introPhase }) => {
   )
 }
 
+interface TurfBackgroundProps {
+  scrollProgress: number
+  introPhase: number
+}
+
+const TurfBackground: React.FC<TurfBackgroundProps> = ({ scrollProgress, introPhase }) => {
+  const [grassParticles, setGrassParticles] = useState<Array<{
+    left: number
+    top: number
+    width: number
+    height: number
+    opacity1: number
+    opacity2: number
+    duration: number
+    blur: number
+  }>>([])
+
+  // Generate grass particles on client side only to avoid hydration mismatch
+  useEffect(() => {
+    const particles = Array.from({ length: 15 }, () => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      width: 2 + Math.random() * 4,
+      height: 10 + Math.random() * 20,
+      opacity1: 0.6 + Math.random() * 0.4,
+      opacity2: 0.4 + Math.random() * 0.3,
+      duration: 3 + Math.random() * 4,
+      blur: 0.5 + Math.random() * 0.5
+    }))
+    setGrassParticles(particles)
+  }, [])
+
+  // Calculate various animation values based on scroll progress
+  const opacity = Math.min(1, scrollProgress * 2) // Fade in quickly
+  const scale = 1 + scrollProgress * 0.3 // Subtle zoom effect
+  const translateY = scrollProgress * -100 // Parallax movement
+  const rotation = scrollProgress * 5 // Gentle rotation
+  const brightness = 1 + scrollProgress * 0.2 // Brighten as it appears
+  const contrast = 1 + scrollProgress * 0.1 // Increase contrast
+  
+  // Create multiple layers for depth
+  const layer1Progress = Math.max(0, Math.min(1, (scrollProgress - 0.2) * 2))
+  const layer2Progress = Math.max(0, Math.min(1, (scrollProgress - 0.4) * 2))
+  
+  return (
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 0, // Behind the content
+      opacity: opacity,
+      transition: 'opacity 0.5s ease',
+      overflow: 'hidden'
+    }}>
+      {/* Main turf layer */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '120%',
+        height: '120%',
+        backgroundImage: 'url(/images/turf.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center center',
+        backgroundRepeat: 'no-repeat',
+        transform: `
+          translate3d(-10%, ${translateY}px, 0) 
+          scale(${scale}) 
+          rotate(${rotation}deg)
+        `,
+        filter: `brightness(${brightness}) contrast(${contrast}) saturate(1.3)`,
+        willChange: 'transform, filter',
+        transformOrigin: 'center center'
+      }} />
+      
+      {/* Animated grass particles overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        opacity: layer1Progress,
+        pointerEvents: 'none'
+      }}>
+        {grassParticles.map((particle, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
+              width: `${particle.width}px`,
+              height: `${particle.height}px`,
+              background: `linear-gradient(to top, 
+                rgba(34, 139, 34, ${particle.opacity1}) 0%, 
+                rgba(50, 205, 50, ${particle.opacity2}) 70%,
+                transparent 100%
+              )`,
+              borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%',
+              transform: `
+                translate3d(0, ${Math.sin(scrollProgress * 10 + i) * 3}px, 0)
+                rotate(${Math.sin(scrollProgress * 8 + i * 2) * 15}deg)
+                scale(${0.8 + Math.sin(scrollProgress * 6 + i * 3) * 0.3})
+              `,
+              animationName: 'grassSway',
+              animationDuration: `${particle.duration}s`,
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: 'infinite',
+              animationDelay: `${i * 200}ms`,
+              filter: `blur(${particle.blur}px)`,
+              willChange: 'transform'
+            }}
+          />
+        ))}
+      </div>
+      
+      {/* Dynamic light rays */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        opacity: layer2Progress * 0.4,
+        background: `
+          radial-gradient(ellipse at ${30 + scrollProgress * 40}% ${20 + scrollProgress * 30}%, 
+            rgba(255, 255, 255, 0.2) 0%, 
+            rgba(255, 255, 255, 0.1) 30%, 
+            transparent 70%
+          )
+        `,
+        mixBlendMode: 'overlay',
+        transform: `rotate(${scrollProgress * 10}deg)`,
+        willChange: 'transform, background'
+      }} />
+      
+      {/* Depth gradient overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: `
+          linear-gradient(
+            ${45 + scrollProgress * 90}deg,
+            rgba(0, 0, 0, 0.2) 0%,
+            transparent 40%,
+            transparent 60%,
+            rgba(0, 0, 0, 0.3) 100%
+          )
+        `,
+        mixBlendMode: 'multiply'
+      }} />
+      
+      {/* Animated texture overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        opacity: scrollProgress * 0.3,
+        background: `
+          repeating-linear-gradient(
+            ${scrollProgress * 180}deg,
+            transparent 0px,
+            rgba(34, 139, 34, 0.1) 1px,
+            transparent 2px,
+            transparent 8px
+          )
+        `,
+        mixBlendMode: 'overlay',
+        willChange: 'background'
+      }} />
+    </div>
+  )
+}
+
 export default function Home() {
   const [introPhase, setIntroPhase] = useState(0) // 0: black, 1: logo forming, 2: logo complete, 3: content
   const [particles, setParticles] = useState<Particle[]>([])
@@ -173,8 +355,10 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [turfScrollProgress, setTurfScrollProgress] = useState(0)
 
   const heroRef = useRef<HTMLDivElement>(null)
+  const wellnessRef = useRef<HTMLElement>(null)
 
     useEffect(() => {
     setMounted(true)
@@ -210,12 +394,25 @@ export default function Home() {
 
 
 
-    // Scroll tracking
+    // Enhanced scroll tracking with turf animation
     const handleScroll = () => {
       const scrolled = window.scrollY
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight
       const progress = Math.min(scrolled / maxScroll, 1)
       setScrollProgress(progress)
+
+      // Calculate turf animation progress based on wellness section
+      if (wellnessRef.current) {
+        const wellnessTop = wellnessRef.current.offsetTop
+        const wellnessHeight = wellnessRef.current.offsetHeight
+        const viewportHeight = window.innerHeight
+        
+        // Start turf animation when wellness section enters viewport
+        const turfStart = wellnessTop - viewportHeight
+        const turfEnd = wellnessTop + wellnessHeight
+        const turfProgress = Math.max(0, Math.min(1, (scrolled - turfStart) / (turfEnd - turfStart)))
+        setTurfScrollProgress(turfProgress)
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -358,6 +555,21 @@ export default function Home() {
             transform: scale(0.6);
             opacity: 0;
             filter: brightness(0.3) saturate(0.5);
+          }
+        }
+
+        @keyframes grassSway {
+          0%, 100% {
+            transform: translateX(0) rotate(-2deg) scaleY(1);
+          }
+          25% {
+            transform: translateX(2px) rotate(1deg) scaleY(1.05);
+          }
+          50% {
+            transform: translateX(0) rotate(2deg) scaleY(0.98);
+          }
+          75% {
+            transform: translateX(-2px) rotate(-1deg) scaleY(1.02);
           }
         }
 
@@ -904,7 +1116,7 @@ export default function Home() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.8) 100%)',
+            background: 'linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.4) 100%)',
             zIndex: 1,
             opacity: introPhase === 3 ? 1 : 0,
             transition: 'opacity 2s ease',
@@ -918,7 +1130,7 @@ export default function Home() {
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.6) 100%)',
+            background: 'radial-gradient(circle at center, transparent 50%, rgba(0,0,0,0.3) 100%)',
             zIndex: 2,
             opacity: introPhase === 3 ? 1 : 0,
             transition: 'opacity 2s ease',
@@ -953,15 +1165,9 @@ export default function Home() {
                 opacity: introPhase === 3 ? 1 : 0
               }}>
                 <span style={{
-                  background: 'linear-gradient(-45deg, #8b5cf6, #ec4899, #06b6d4, #8b5cf6)',
-                  backgroundSize: '400% 400%',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                  animation: 'gradientShift 3s ease infinite',
+                  color: '#a855f7',
                   fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  textShadow: 'none'
+                  fontWeight: 'inherit'
                 }}>
                   Reimagined
                 </span>
@@ -1090,14 +1296,19 @@ export default function Home() {
         </section>
 
         {/* Apple-Style Experience Section */}
-        <section style={{
+        <section ref={wellnessRef} style={{
           padding: '8rem 2rem',
-          position: 'relative'
+          position: 'relative',
+          overflow: 'hidden'
         }}>
+          {/* Turf Background Animation */}
+          <TurfBackground scrollProgress={turfScrollProgress} introPhase={introPhase} />
           <div style={{
             maxWidth: '1000px',
             margin: '0 auto',
-            textAlign: 'center'
+            textAlign: 'center',
+            position: 'relative',
+            zIndex: 1
           }}>
             <h2 style={{
               fontSize: 'clamp(2.5rem, 6vw, 3.5rem)',

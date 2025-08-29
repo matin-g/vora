@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Vora - Your AI Wellness Coach That Actually Cares',
-  description: 'Stop treating your health like a subscription you\'ll cancel. Get personalized AI-powered wellness guidance that adapts to your real life.',
+  description: 'Stop treating your health like a subscription you&apos;ll cancel. Get personalized AI-powered wellness guidance that adapts to your real life.',
   keywords: ['AI wellness', 'health coach', 'preventative healthcare', 'AI health assistant', 'wellness app', 'health tracking'],
   authors: [{ name: 'Vora' }],
   creator: 'Vora',
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Vora - Your AI Wellness Coach That Actually Cares',
-    description: 'Stop treating your health like a subscription you\'ll cancel. Get personalized AI-powered wellness guidance that adapts to your real life.',
+    description: 'Stop treating your health like a subscription you&apos;ll cancel. Get personalized AI-powered wellness guidance that adapts to your real life.',
     url: 'https://vora.ai',
     siteName: 'Vora',
     images: [
